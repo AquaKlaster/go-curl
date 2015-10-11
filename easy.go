@@ -36,11 +36,12 @@ static CURLcode curl_easy_getinfo_slist(CURL *curl, CURLINFO info, struct curl_s
 }
 
 static CURLFORMcode curl_formadd_name_content_length(
-    struct curl_httppost **httppost, struct curl_httppost **last_post, char *name, char *content, int length) {
+    struct curl_httppost **httppost, struct curl_httppost **last_post, char *name, char *content, long length) {
     return curl_formadd(httppost, last_post,
                         CURLFORM_COPYNAME, name,
                         CURLFORM_COPYCONTENTS, content,
-                        CURLFORM_CONTENTSLENGTH, length, CURLFORM_END);
+                        CURLFORM_CONTENTSLENGTH, length,
+                        CURLFORM_END);
 }
 static CURLFORMcode curl_formadd_name_content_length_type(
     struct curl_httppost **httppost, struct curl_httppost **last_post, char *name, char *content, int length, char *type) {
@@ -425,15 +426,15 @@ func (form *Form) Add(name string, content interface{}) error {
 	defer C.free(unsafe.Pointer(namestr))
 	var (
 		buffer *C.char
-		length C.int
+		length C.long
 	)
 	switch t := content.(type) {
 	case string:
 		buffer = C.CString(t)
-		length = C.int(len(t))
+		length = C.long(len(t))
 	case []byte:
 		buffer = C.CString(string(t))
-		length = C.int(len(t))
+		length = C.long(len(t))
 	default:
 		panic("not implemented")
 	}
