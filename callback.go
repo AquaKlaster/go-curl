@@ -26,6 +26,8 @@ func goGetCurlField(p uintptr, cname *C.char) uintptr {
 		return reflect.ValueOf(curl.writeFunction).Pointer()
 	case "progressFunction":
 		return reflect.ValueOf(curl.progressFunction).Pointer()
+	case "debugFunction":
+		return reflect.ValueOf(curl.debugFunction).Pointer()
 	case "headerData":
 		return uintptr(unsafe.Pointer(curl.headerData))
 	case "writeData":
@@ -34,6 +36,8 @@ func goGetCurlField(p uintptr, cname *C.char) uintptr {
 		return uintptr(unsafe.Pointer(curl.readData))
 	case "progressData":
 		return uintptr(unsafe.Pointer(curl.progressData))
+	case "debugData":
+		return uintptr(unsafe.Pointer(curl.debugData))
 	}
 
 	warnf("Field not found: %s", name)
@@ -87,4 +91,18 @@ func goCallReadFunctionCallback(f *func([]byte, interface{}) int,
 		panic("read_callback memcpy error!")
 	}
 	return uintptr(ret)
+}
+
+//export goCallDebugFunctionCallback
+func goCallDebugFunctionCallback(f *func(CurlInfoType, []byte, interface{}) bool,
+	infotype C.curl_infotype,
+	ptr *C.char,
+	size C.size_t,
+	userdata interface{}) uintptr {
+	buf := C.GoBytes(unsafe.Pointer(ptr), C.int(size))
+	ok := (*f)(CurlInfoType(infotype), buf, userdata)
+	if ok {
+		return 0
+	}
+	return 1
 }
